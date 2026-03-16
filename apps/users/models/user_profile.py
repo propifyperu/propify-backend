@@ -8,9 +8,9 @@ class UserProfile(BaseAuditModel):
 
     avatar_url = models.FileField(max_length=500, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
-    nro_document = models.CharField(max_length=30, blank=True, default="")
-    phone = models.CharField(max_length=30, blank=True, default="")
-    address = models.CharField(max_length=255, blank=True, default="")
+    nro_document = models.CharField(max_length=30, blank=True, null=True)
+    phone = models.CharField(max_length=30, blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
 
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True, related_name="user_profiles",)
     city = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name="user_profiles",)

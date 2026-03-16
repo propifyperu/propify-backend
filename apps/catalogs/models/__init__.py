@@ -8,12 +8,14 @@ from .document_type import DocumentType
 from .utility_service import UtilityService
 from .canal_lead import CanalLead
 from .lead_status import LeadStatus
+from .property_condition import PropertyCondition
 from .event_type import EventType
 
 __all__ = [
     "PropertyType",
     "PropertySubtype",
     "PropertyStatus",
+    "PropertyCondition",
     "OperationType",
     "PaymentMethod",
     "Currency",
