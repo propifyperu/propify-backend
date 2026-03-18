@@ -3,7 +3,7 @@ from common.models import BaseAuditModel
 
 
 class RequirementMatch(BaseAuditModel):
-    requirement = models.ForeignKey("crm.Requirement", on_delete=models.CASCADE, related_name="matches")
+    requirement = models.ForeignKey("crm.Requirement", on_delete=models.CASCADE, related_name="requirement_matches")
     property = models.ForeignKey("properties.Property", on_delete=models.CASCADE, related_name="requirement_matches")
 
     score = models.DecimalField(max_digits=6, decimal_places=2)  # 0..100

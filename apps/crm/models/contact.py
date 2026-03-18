@@ -39,7 +39,7 @@ class Contact(BaseAuditModel):
     gender = models.CharField(max_length=1, choices=Gender.choices, null=True, blank=True)
     phone = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
-    photo = models.ImageField(upload_to="contacts/photos/", null=True, blank=True)
+    photo = models.FileField(upload_to="contacts/photos/", null=True, blank=True)
     contact_type = models.CharField(max_length=30, choices=ContactType.choices, default=ContactType.OTHER)
     is_active = models.BooleanField(default=True, db_index=True)
 

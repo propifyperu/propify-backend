@@ -21,7 +21,7 @@ class Match(BaseAuditModel):
         related_name="requested_matches",
     )
     lead = models.ForeignKey("crm.Lead", on_delete=models.SET_NULL, null=True, blank=True, related_name="matches")
-    requirement = models.ForeignKey("crm.Requirement", on_delete=models.SET_NULL, null=True, blank=True, related_name="matches")
+    requirement = models.ForeignKey("crm.Requirement", on_delete=models.SET_NULL, null=True, blank=True, related_name="match_requests")
     requirementmatch = models.ForeignKey(
         "crm.RequirementMatch",
         on_delete=models.SET_NULL,

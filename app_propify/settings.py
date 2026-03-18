@@ -10,7 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
+from datetime import timedelta
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()  # carga .env si existe; en prod se ignora y valen las env vars del sistema
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +30,8 @@ SECRET_KEY = 'django-insecure-ni$1eojl@r&@iy1(cr$3vo4h!ecc%^zbu%6=+^49*r+y_e9z7&
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+LOCAL_MODE = os.getenv("LOCAL_MODE", "False").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = []
 
@@ -41,7 +49,9 @@ INSTALLED_APPS = [
 
     # Third-party
     "rest_framework",
+    "drf_yasg",
     "django_extensions",
+    "storages",
 
     # Django
     'django.contrib.admin',
@@ -55,6 +65,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "users.User"
 
 MIDDLEWARE = [
+    'common.middleware.RequestLoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -88,10 +99,25 @@ WSGI_APPLICATION = 'app_propify.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    },
+    "legacy": {
+        "ENGINE": "mssql",
+        "NAME": os.getenv("LEGACY_DB_NAME"),
+        "USER": os.getenv("LEGACY_DB_USER"),
+        "PASSWORD": os.getenv("LEGACY_DB_PASS"),
+        "HOST": os.getenv("LEGACY_DB_HOST"),
+        "PORT": os.getenv("LEGACY_DB_PORT", "1433"),
+        "OPTIONS": {
+            "driver": os.getenv("LEGACY_DB_DRIVER", "ODBC Driver 18 for SQL Server"),
+            "extra_params": os.getenv(
+                "LEGACY_DB_EXTRA_PARAMS",
+                "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
+            ),
+        },
+    },
 }
 
 
@@ -117,9 +143,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-pe'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Lima'
 
 USE_I18N = True
 
@@ -130,3 +156,83 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# ---------------------------------------------------------------------------
+# Azure Blob Storage / Media
+# ---------------------------------------------------------------------------
+
+AZURE_ACCOUNT_NAME = os.getenv("AZURE_ACCOUNT_NAME")
+AZURE_ACCOUNT_KEY = os.getenv("AZURE_ACCOUNT_KEY")
+AZURE_CONTAINER = os.getenv("AZURE_CONTAINER", "media")
+USE_AZURE_STORAGE = os.getenv("USE_AZURE_STORAGE", "False").lower() in ("1", "true", "yes")
+
+MEDIA_ROOT = BASE_DIR / "media"
+
+if USE_AZURE_STORAGE and AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY:
+    MEDIA_URL = f"https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/"
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                "account_name": AZURE_ACCOUNT_NAME,
+                "account_key": AZURE_ACCOUNT_KEY,
+                "azure_container": AZURE_CONTAINER,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    MEDIA_URL = "/media/"
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'common.auth.LocalModeAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Formato: Bearer <access_token>',
+        }
+    },
+    'USE_SESSION_AUTH': False,
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {'format': '%(levelname)s %(message)s'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'simple'},
+    },
+    'loggers': {
+        'propify.requests': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}

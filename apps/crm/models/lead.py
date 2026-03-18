@@ -40,7 +40,7 @@ class Lead(BaseAuditModel):  #EntradaLead
         related_name="leads",
     )
     operation_types = models.ManyToManyField(
-        "OperationType",
+        "catalogs.OperationType",
         related_name="leads",
         blank=True
     )
