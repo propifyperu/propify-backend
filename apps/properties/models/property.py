@@ -24,6 +24,8 @@ class Property(BaseAuditModel):
     property_subtype = models.ForeignKey(
         "catalogs.PropertySubtype",
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name="properties",
     )
     property_condition = models.ForeignKey(
@@ -48,10 +50,11 @@ class Property(BaseAuditModel):
         on_delete=models.PROTECT,
         related_name="properties",
     )
-
     district = models.ForeignKey(
         "locations.District",
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name="properties",
     )
     urbanization = models.ForeignKey(
@@ -76,6 +79,7 @@ class Property(BaseAuditModel):
         related_name="responsible_properties",
     )
 
+    code = models.CharField(max_length=20, null=True, blank=True, default='')
     # WordPress sync
     wp_post_id = models.IntegerField(null=True, blank=True, db_index=True)
     wp_slug = models.SlugField(null=True, blank=True)

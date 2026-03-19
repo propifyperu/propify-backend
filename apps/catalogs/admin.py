@@ -35,7 +35,7 @@ class PropertyTypeAdmin(BaseModelAdmin):
 
 @admin.register(PropertySubtype)
 class PropertySubtypeAdmin(admin.ModelAdmin):
-    list_display = ("name", "property_type", "is_active", "created_at")
+    list_display = ("id", "name", "property_type", "is_active", "created_at")
     list_filter = ("is_active", "property_type")
     search_fields = ("name", "property_type__name")
     autocomplete_fields = ("property_type",)
@@ -87,7 +87,7 @@ class EventTypeAdmin(BaseModelAdmin):
 
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ("code", "symbol", "name", "is_active", "created_at")
+    list_display = ("id", "code", "symbol", "name", "is_active", "created_at")
     list_filter = ("is_active",)
     search_fields = ("code", "name")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
@@ -95,7 +95,7 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 @admin.register(DocumentType)
 class DocumentTypeAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "is_active", "created_at")
+    list_display = ("id", "code", "name", "is_active", "created_at")
     list_filter = ("is_active",)
     search_fields = ("code", "name")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
@@ -103,7 +103,7 @@ class DocumentTypeAdmin(admin.ModelAdmin):
 
 @admin.register(UtilityService)
 class UtilityServiceAdmin(admin.ModelAdmin):
-    list_display = ("category", "name", "is_active", "created_at")
+    list_display = ("id", "category", "name", "is_active", "created_at")
     list_filter = ("is_active", "category")
     search_fields = ("category", "name")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")

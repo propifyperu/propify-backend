@@ -2,9 +2,9 @@ from django.db import models
 from common.models import BaseAuditModel
 
 class ContractTypeChoices(models.TextChoices):
-    EXCLUSIVE = "exclusive", "Exclusive"
-    SEMI_EXCLUSIVE = "semi_exclusive", "Semi exclusive"
-    NON_EXCLUSIVE = "non_exclusive", "Non exclusive"
+    EXCLUSIVE = "exclusive", "Exclusivo"
+    SEMI_EXCLUSIVE = "semi_exclusive", "Semi exclusivo"
+    NON_EXCLUSIVE = "non_exclusive", "No exclusivo"
 
 class PropertyFinancialInfo(BaseAuditModel):
     property = models.OneToOneField(

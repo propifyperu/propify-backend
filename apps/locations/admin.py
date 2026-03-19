@@ -18,7 +18,7 @@ class DepartmentInline(admin.TabularInline):
 
 @admin.register(Country)
 class CountryAdmin(BaseModelAdmin):
-    list_display = ("name", "code", "is_active", "created_at")
+    list_display = ("id", "name", "code", "is_active", "created_at")
     search_fields = ("name", "code")
     inlines = [DepartmentInline]
 
@@ -36,7 +36,7 @@ class ProvinceInline(admin.TabularInline):
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ("name", "country", "is_active", "created_at")
+    list_display = ("id", "name", "country", "is_active", "created_at")
     list_filter = ("is_active", "country")
     search_fields = ("name", "country__name")
     autocomplete_fields = ("country",)
@@ -57,7 +57,7 @@ class DistrictInline(admin.TabularInline):
 
 @admin.register(Province)
 class ProvinceAdmin(admin.ModelAdmin):
-    list_display = ("name", "department", "is_active", "created_at")
+    list_display = ("id", "name", "department", "is_active", "created_at")
     list_filter = ("is_active", "department__country")
     search_fields = ("name", "department__name")
     autocomplete_fields = ("department",)
@@ -78,7 +78,7 @@ class UrbanizationInline(admin.TabularInline):
 
 @admin.register(District)
 class DistrictAdmin(admin.ModelAdmin):
-    list_display = ("name", "province", "is_active", "created_at")
+    list_display = ("id", "name", "province", "is_active", "created_at")
     list_filter = ("is_active", "province__department__country")
     search_fields = ("name", "province__name")
     autocomplete_fields = ("province",)
@@ -92,7 +92,7 @@ class DistrictAdmin(admin.ModelAdmin):
 
 @admin.register(Urbanization)
 class UrbanizationAdmin(admin.ModelAdmin):
-    list_display = ("name", "district", "is_active", "created_at")
+    list_display = ("id", "name", "district", "is_active", "created_at")
     list_filter = ("is_active",)
     search_fields = ("name", "district__name")
     autocomplete_fields = ("district",)

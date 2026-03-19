@@ -2,16 +2,18 @@ from django.db import models
 from common.models import BaseAuditModel
 
 class UnitChoices(models.TextChoices):
-    M2 = "m2", "m²"
-    HA = "ha", "ha"
+    M2 = "m2", "Metros cuadrados"
+    HA = "ha", "Hectareas"
     M  = "m",  "m"
     FT = "ft", "ft"
 
 class GarageTypeChoices(models.TextChoices):
     # deja esto editable, tú lo completas
-    NONE = "none", "None"
-    OPEN = "open", "Open"
-    COVERED = "covered", "Covered"
+    LINEAR_OPEN = "LINEAR_OPEN", "Lineal Abierto"
+    ROOFED_LINEAR = "ROOFED_LINEAR", "Linear Techado"
+    PARALLEL_OPEN = "PARALLEL_OPEN", "Paralelo Abierto"
+    PARALLEL_ROOFED = "PARALLEL_ROOFED", "Paralelo Techado"
+    OTHER = "OTHER", "Otros"
 
 class PropertySpecs(BaseAuditModel):
     property = models.OneToOneField(
@@ -34,11 +36,11 @@ class PropertySpecs(BaseAuditModel):
     front_measure = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     depth_measure = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 
-    area_unit = models.CharField(max_length=10, choices=UnitChoices.choices, blank=True, default=UnitChoices.M2,)
-    linear_unit = models.CharField(max_length=10, choices=UnitChoices.choices, blank=True, default=UnitChoices.M,)
+    area_unit = models.CharField(max_length=10, choices=UnitChoices.choices,null=True, blank=True)
+    linear_unit = models.CharField(max_length=10, choices=UnitChoices.choices,null=True, blank=True)
 
     garage_spaces = models.IntegerField(null=True, blank=True)
-    garage_type = models.CharField(max_length=30, choices=GarageTypeChoices.choices, blank=True, default=GarageTypeChoices.NONE,)
+    garage_type = models.CharField(max_length=30, choices=GarageTypeChoices.choices,null=True, blank=True)
     parking_cost_included = models.BooleanField(default=False)
     parking_cost = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 

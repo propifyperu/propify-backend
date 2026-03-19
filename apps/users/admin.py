@@ -28,7 +28,7 @@ class AreaAdmin(BaseModelAdmin):
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ("name", "area", "is_active", "created_at")
+    list_display = ("id", "name", "area", "is_active", "created_at")
     list_filter = ("is_active", "area")
     search_fields = ("name", "area__name")
     autocomplete_fields = ("area",)
@@ -59,7 +59,7 @@ class UserAdmin(DjangoUserAdmin):
     inlines = [UserProfileInline]
 
     list_display = (
-        "username", "email", "first_name", "last_name",
+        "id", "username", "email", "first_name", "last_name",
         "role", "is_active", "is_staff", "date_joined",
     )
     list_filter = ("is_active", "is_staff", "role__area", "role")

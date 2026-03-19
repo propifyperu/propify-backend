@@ -12,6 +12,7 @@ class PropertyDocument(BaseAuditModel):
         "catalogs.DocumentType",
         on_delete=models.PROTECT,
         related_name="property_documents",
+        null=True, blank=True
     )
 
     file = models.FileField(upload_to="properties/documents/", null=True, blank=True)

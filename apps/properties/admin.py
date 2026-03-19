@@ -13,7 +13,7 @@ class PropertySpecsInline(admin.StackedInline):
     can_delete = False
     fields = (
         "bedrooms", "bathrooms", "half_bathrooms",
-        "land_area", "built_area", "area_unit",
+        "land_area", "built_area", "area_unit","linear_unit","front_measure","depth_measure",
         "floors_total", "unit_location",
         "garage_spaces", "garage_type", "parking_cost_included", "parking_cost",
         "antiquity_years", "delivery_date",
@@ -54,9 +54,10 @@ class PropertyDocumentInline(admin.TabularInline):
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "title", "property_type", "operation_type",
-        "property_status", "district", "price", "currency",
-        "responsible", "created_at",
+        "id","code","contact", "title", "property_type","property_subtype","property_condition", "operation_type",
+        "property_status", "district","urbanization", "price", "currency","payment_method",
+        "responsible", "created_at","wp_post_id","wp_slug","wp_last_sync","is_project","project_name","uuid","maintenance_fee",
+        "map_address","display_address","latitude","longitude","registry_number"
     )
     list_filter = (
         "property_type", "operation_type", "property_status",
@@ -109,7 +110,7 @@ class PropertyAdmin(admin.ModelAdmin):
 
 @admin.register(PropertyMedia)
 class PropertyMediaAdmin(admin.ModelAdmin):
-    list_display = ("property", "media_type", "title", "order", "created_at")
+    list_display = ("id", "property", "media_type","file", "title", "order", "created_at")
     list_filter = ("media_type",)
     search_fields = ("property__title", "title")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
@@ -121,7 +122,7 @@ class PropertyMediaAdmin(admin.ModelAdmin):
 
 @admin.register(PropertyDocument)
 class PropertyDocumentAdmin(admin.ModelAdmin):
-    list_display = ("property", "document_type", "status", "valid_from", "valid_to", "created_at")
+    list_display = ("id", "property", "document_type", "status", "valid_from", "valid_to", "created_at")
     list_filter = ("document_type", "status")
     search_fields = ("property__title",)
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")

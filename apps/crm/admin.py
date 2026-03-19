@@ -18,7 +18,7 @@ from .models import (
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ("full_name", "contact_type", "phone", "email", "is_active", "assigned_agent", "created_at")
+    list_display = ("id", "full_name", "contact_type", "phone", "email", "is_active", "assigned_agent", "created_at")
     list_filter = ("is_active", "contact_type", "document_type", "gender")
     search_fields = ("full_name", "phone", "email", "document_number")
     autocomplete_fields = ("assigned_agent",)
@@ -77,7 +77,7 @@ class RequirementAdmin(admin.ModelAdmin):
 
 @admin.register(RequirementMatch)
 class RequirementMatchAdmin(admin.ModelAdmin):
-    list_display = ("requirement", "property", "score", "is_active", "computed_at")
+    list_display = ("id", "requirement", "property", "score", "is_active", "computed_at")
     list_filter = ("is_active",)
     search_fields = ("requirement__id", "property__title")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by", "computed_at", "details")
@@ -122,7 +122,7 @@ class ProposalAdmin(admin.ModelAdmin):
 
 @admin.register(ExchangeRate)
 class ExchangeRateAdmin(admin.ModelAdmin):
-    list_display = ("base_currency", "quote_currency", "rate", "rate_date", "provider", "is_active")
+    list_display = ("id", "base_currency", "quote_currency", "rate", "rate_date", "provider", "is_active")
     list_filter = ("is_active", "base_currency", "quote_currency")
     search_fields = ("provider",)
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
@@ -136,7 +136,7 @@ class ExchangeRateAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = (
-        "code", "title", "event_type", "assigned_agent",
+        "id", "code", "title", "event_type", "assigned_agent",
         "status", "start_time", "end_time", "is_active",
     )
     list_filter = ("status", "is_active", "event_type")
