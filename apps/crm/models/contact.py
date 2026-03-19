@@ -26,8 +26,8 @@ class Contact(BaseAuditModel):
         blank=True,
         related_name="assigned_contacts",
     )
-
-    full_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255, null=True, blank=True)
+    last_name = models.CharField(max_length=255,null=True, blank=True)
     document_type = models.CharField(
         max_length=20,
         choices=DocumentType.choices,
@@ -45,7 +45,17 @@ class Contact(BaseAuditModel):
 
     class Meta:
         db_table = "contact"
-        ordering = ["full_name"]
+        ordering = ["first_name"]
 
     def __str__(self) -> str:
         return self.full_name
+    
+    @property
+    def full_name(self):
+        """Retorna el nombre completo del contacto, manejando campos encriptados."""
+        parts = []
+        if self.first_name:
+            parts.append(str(self.first_name))
+        if self.last_name:
+            parts.append(str(self.last_name))
+        return " ".join(parts) if parts else "Sin nombre"

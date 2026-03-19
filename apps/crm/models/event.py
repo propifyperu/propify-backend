@@ -5,14 +5,14 @@ from common.models import BaseAuditModel
 
 class EventStatus(models.TextChoices):
     PENDING = "pending", "Pending"
-    ACCEPTED = "done", "Done"
-    REJECTED = "canceled", "Canceled"
+    ACCEPTED = "accepted", "Accepted"
+    REJECTED = "rejected", "Rejected"
 
 
 class Event(BaseAuditModel):
-    code = models.CharField(max_length=50, unique=True)
+    code = models.CharField(max_length=50,null=True, blank=True, unique=True)
 
-    event_type = models.ForeignKey("catalogs.EventType", on_delete=models.PROTECT, related_name="events")
+    event_type = models.ForeignKey("catalogs.EventType", null=True, blank=True,on_delete=models.PROTECT, related_name="events")
     assigned_agent = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

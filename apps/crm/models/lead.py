@@ -31,11 +31,14 @@ class Lead(BaseAuditModel):  #EntradaLead
     )
     lead_status = models.ForeignKey(
         "catalogs.LeadStatus",
+        null=True,
+        blank=True,
         on_delete=models.PROTECT,
         related_name="leads",
     )
     canal_lead = models.ForeignKey(
         "catalogs.CanalLead",
+        null=True, blank=True,
         on_delete=models.PROTECT,
         related_name="leads",
     )
@@ -52,11 +55,12 @@ class Lead(BaseAuditModel):  #EntradaLead
     )
 
     source_detail = models.CharField(max_length=255, null=True, blank=True) #para poner deatalle del canal / puede ser una campaña.... 
+    
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-
+    username = models.CharField(max_length=150, blank=True, null=True,db_index=True)
     # Chat/WhatsApp/Chatwoot (si lo usarás)
     date_entry = models.DateTimeField(null=True, blank=True)
     id_chatwoot = models.CharField(max_length=100, null=True, blank=True, db_index=True)

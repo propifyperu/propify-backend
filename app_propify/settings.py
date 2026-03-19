@@ -32,6 +32,7 @@ SECRET_KEY = 'django-insecure-ni$1eojl@r&@iy1(cr$3vo4h!ecc%^zbu%6=+^49*r+y_e9z7&
 DEBUG = True
 
 LOCAL_MODE = os.getenv("LOCAL_MODE", "False").lower() in ("true", "1", "yes")
+FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', 'Qk9vQ2h2d2ZpQ2ZpQ2h2d2ZpQ2ZpQ2h2d2ZpQ2ZpQ2g=')
 
 ALLOWED_HOSTS = []
 

@@ -39,7 +39,7 @@ class RequirementInline(admin.TabularInline):
 @admin.register(Lead)
 class LeadAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "full_name", "phone", "lead_status", "canal_lead",
+        "id", "full_name", "phone", "lead_status", "canal_lead","contact",
         "assigned_to", "is_active", "date_entry", "created_at",
     )
     list_filter = ("is_active", "lead_status", "canal_lead", "area")
@@ -136,7 +136,7 @@ class ExchangeRateAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "code", "title", "event_type", "assigned_agent",
+        "id", "code", "title", "event_type", "assigned_agent","contact","lead",
         "status", "start_time", "end_time", "is_active",
     )
     list_filter = ("status", "is_active", "event_type")
