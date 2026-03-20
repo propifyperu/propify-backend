@@ -1,9 +1,12 @@
-from rest_framework import mixins, viewsets
-from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.properties.models import Property
 from apps.properties.serializers import PropertySerializer
+from apps.properties.serializers.property import PropertyCardSerializer
 
 
 class PropertyViewSet(
@@ -46,3 +49,22 @@ class PropertyViewSet(
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=["Propiedades"],
+        operation_summary="Listado de tarjetas de propiedades",
+        operation_description="Devuelve propiedades con los campos necesarios para las tarjetas del listado.",
+    )
+    @action(detail=False, methods=["get"])
+    def cards(self, request):
+        qs = (
+            Property.objects
+            .select_related(
+                "property_type", "property_subtype", "property_condition",
+                "operation_type", "currency", "property_status", "responsible",
+                "specs",
+            )
+            .prefetch_related("media")
+        )
+        serializer = PropertyCardSerializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
