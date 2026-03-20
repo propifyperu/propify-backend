@@ -1,9 +1,6 @@
 # apps/crm/management/commands/migrate_legacy_events.py
 from __future__ import annotations
-
 from datetime import datetime
-from typing import Optional
-
 from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.db import connections, transaction

@@ -90,7 +90,7 @@ class MeView(APIView):
     @swagger_auto_schema(
         tags=_TAGS,
         operation_summary="Usuario autenticado",
-        operation_description="Retorna los datos del usuario que realiza la request.",
+        operation_description="Retorna los datos del usuario autenticado, incluyendo su perfil (`user_profile`) si existe.",
         responses={200: UserMeSerializer()},
     )
     def get(self, request):

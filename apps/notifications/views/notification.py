@@ -1,6 +1,8 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.notifications.models import Notification
 from apps.notifications.serializers import NotificationSerializer
@@ -38,3 +40,18 @@ class NotificationViewSet(
     )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=_TAGS,
+        operation_summary="Obtener mis notificaciones",
+        operation_description="Devuelve las últimas 10 notificaciones del usuario autenticado.",
+    )
+    @action(detail=False, methods=["get"], url_path="my-notifications")
+    def my_notifications(self, request):
+        qs = (
+            Notification.objects
+            .filter(user=request.user)
+            .order_by("-created_at")[:10]
+        )
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
