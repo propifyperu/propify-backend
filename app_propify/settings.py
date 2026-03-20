@@ -26,15 +26,38 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ni$1eojl@r&@iy1(cr$3vo4h!ecc%^zbu%6=+^49*r+y_e9z7&'
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "django-insecure-ni$1eojl@r&@iy1(cr$3vo4h!ecc%^zbu%6=+^49*r+y_e9z7&"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 LOCAL_MODE = os.getenv("LOCAL_MODE", "False").lower() in ("true", "1", "yes")
 FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', 'Qk9vQ2h2d2ZpQ2ZpQ2h2d2ZpQ2ZpQ2h2d2ZpQ2ZpQ2g=')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "").split(",")
+    if host.strip()
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "False").lower() in (
+    "true", "1", "yes"
+)
 
 
 # Application definition
@@ -101,8 +124,19 @@ WSGI_APPLICATION = 'app_propify.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "mssql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASS"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT", "1433"),
+        "OPTIONS": {
+            "driver": os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server"),
+            "extra_params": os.getenv(
+                "DB_EXTRA_PARAMS",
+                "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
+            ),
+        },
     },
     "legacy": {
         "ENGINE": "mssql",
