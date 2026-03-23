@@ -1,12 +1,16 @@
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.properties.models import Property
 from apps.properties.serializers import PropertySerializer
-from apps.properties.serializers.property import PropertyCardSerializer
+from apps.properties.serializers.property import (
+    PropertyCardSerializer,
+    PropertyCreateFullSerializer,
+    PropertyFullDetailSerializer,
+)
 
 
 class PropertyViewSet(
@@ -68,3 +72,32 @@ class PropertyViewSet(
         )
         serializer = PropertyCardSerializer(qs, many=True, context={"request": request})
         return Response(serializer.data)
+
+    @swagger_auto_schema(
+        tags=["Propiedades"],
+        operation_summary="Detalle completo de propiedad",
+        operation_description="Retorna la propiedad con todos sus sub-objetos anidados: specs, financial, media y documents.",
+    )
+    @action(detail=True, methods=["get"], url_path="full-detail")
+    def full_detail(self, request, pk=None):
+        instance = self.get_object()
+        serializer = PropertyFullDetailSerializer(instance, context={"request": request})
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        tags=["Propiedades"],
+        operation_summary="Crear propiedad completa",
+        operation_description=(
+            "Crea una propiedad junto con todos sus sub-objetos en una sola transacción atómica. "
+            "Payload esperado: { property, specs?, financial_info?, media[]?, documents[]? }"
+        ),
+    )
+    @action(detail=False, methods=["post"], url_path="create-full")
+    def create_full(self, request):
+        serializer = PropertyCreateFullSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        prop = serializer.save()
+        # Recargar con todas las relaciones para devolver el detalle completo
+        prop.refresh_from_db()
+        output = PropertyFullDetailSerializer(prop, context={"request": request})
+        return Response(output.data, status=status.HTTP_201_CREATED)
