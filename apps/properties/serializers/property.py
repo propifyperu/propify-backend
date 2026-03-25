@@ -71,67 +71,6 @@ class PropertyFullDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-# ---------------------------------------------------------------------------
-# Create full serializer (escritura: crea property + sub-objetos en un solo request)
-# ---------------------------------------------------------------------------
-
-class _NestedSpecsWriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PropertySpecs
-        exclude = ["id", "property", "created_at", "updated_at", "created_by", "updated_by"]
-
-
-class _NestedFinancialWriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PropertyFinancialInfo
-        exclude = ["id", "property", "created_at", "updated_at", "created_by", "updated_by"]
-
-
-class _NestedMediaWriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PropertyMedia
-        exclude = ["id", "property", "created_at", "updated_at", "created_by", "updated_by"]
-
-
-class _NestedDocumentWriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PropertyDocument
-        exclude = ["id", "property", "created_at", "updated_at", "created_by", "updated_by"]
-
-
-class PropertyCreateFullSerializer(serializers.Serializer):
-    property = PropertySerializer()
-    specs = _NestedSpecsWriteSerializer(required=False)
-    financial_info = _NestedFinancialWriteSerializer(required=False)
-    media = _NestedMediaWriteSerializer(many=True, required=False, default=list)
-    documents = _NestedDocumentWriteSerializer(many=True, required=False, default=list)
-
-    def create(self, validated_data):
-        from django.db import transaction
-        specs_data = validated_data.pop("specs", None)
-        financial_data = validated_data.pop("financial_info", None)
-        media_list = validated_data.pop("media", [])
-        documents_list = validated_data.pop("documents", [])
-        property_data = validated_data.pop("property")
-
-        with transaction.atomic():
-            property_data["uuid"] = uuid_lib.uuid4()
-            prop = Property.objects.create(**property_data)
-
-            if specs_data is not None:
-                PropertySpecs.objects.create(property=prop, **specs_data)
-
-            if financial_data is not None:
-                PropertyFinancialInfo.objects.create(property=prop, **financial_data)
-
-            for item in media_list:
-                PropertyMedia.objects.create(property=prop, **item)
-
-            for item in documents_list:
-                PropertyDocument.objects.create(property=prop, **item)
-
-        return prop
-
 
 class PropertyCardSpecsSerializer(serializers.ModelSerializer):
     class Meta:
