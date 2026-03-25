@@ -16,10 +16,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()  # carga .env si existe; en prod se ignora y valen las env vars del sistema
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+ENV_FILE = os.getenv("ENV_FILE", ".env")
+load_dotenv(BASE_DIR / ENV_FILE)
 
 
 # Quick-start development settings - unsuitable for production
@@ -32,7 +33,7 @@ SECRET_KEY = os.getenv(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 LOCAL_MODE = os.getenv("LOCAL_MODE", "False").lower() in ("true", "1", "yes")
 FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', 'Qk9vQ2h2d2ZpQ2ZpQ2h2d2ZpQ2ZpQ2h2d2ZpQ2ZpQ2g=')
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
 
     # Third-party
     "rest_framework",
+    "django_filters",
     "drf_yasg",
     "django_extensions",
     "storages",
@@ -125,38 +127,50 @@ WSGI_APPLICATION = 'app_propify.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "mssql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASS"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT", "1433"),
-        "OPTIONS": {
-            "driver": os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server"),
-            "extra_params": os.getenv(
-                "DB_EXTRA_PARAMS",
-                "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
-            ),
+USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() in ("true", "1", "yes")
+
+if USE_SQLITE:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / os.getenv("SQLITE_NAME", "db.sqlite3"),
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "mssql",
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASS"),
+            "HOST": os.getenv("DB_HOST"),
+            "PORT": os.getenv("DB_PORT", "1433"),
+            "CONN_MAX_AGE": 60,
+            "OPTIONS": {
+                "driver": os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server"),
+                "extra_params": os.getenv(
+                    "DB_EXTRA_PARAMS",
+                    "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
+                ),
+            },
         },
-    },
-    "legacy": {
-        "ENGINE": "mssql",
-        "NAME": os.getenv("LEGACY_DB_NAME"),
-        "USER": os.getenv("LEGACY_DB_USER"),
-        "PASSWORD": os.getenv("LEGACY_DB_PASS"),
-        "HOST": os.getenv("LEGACY_DB_HOST"),
-        "PORT": os.getenv("LEGACY_DB_PORT", "1433"),
-        "OPTIONS": {
-            "driver": os.getenv("LEGACY_DB_DRIVER", "ODBC Driver 18 for SQL Server"),
-            "extra_params": os.getenv(
-                "LEGACY_DB_EXTRA_PARAMS",
-                "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
-            ),
+        "legacy": {
+            "ENGINE": "mssql",
+            "NAME": os.getenv("LEGACY_DB_NAME"),
+            "USER": os.getenv("LEGACY_DB_USER"),
+            "PASSWORD": os.getenv("LEGACY_DB_PASS"),
+            "HOST": os.getenv("LEGACY_DB_HOST"),
+            "PORT": os.getenv("LEGACY_DB_PORT", "1433"),
+            "CONN_MAX_AGE": 60,
+            "OPTIONS": {
+                "driver": os.getenv("LEGACY_DB_DRIVER", "ODBC Driver 18 for SQL Server"),
+                "extra_params": os.getenv(
+                    "LEGACY_DB_EXTRA_PARAMS",
+                    "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
+                ),
+            },
         },
-    },
-}
+    }
 
 
 # Password validation
@@ -239,6 +253,7 @@ REST_FRAMEWORK = {
         'common.auth.LocalModeAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
