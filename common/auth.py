@@ -1,5 +1,13 @@
+# NOTA: CurrentUserMiddleware por sí solo no basta para DRF con JWT, porque
+# DRF autentica al usuario de forma lazy (dentro del view), es decir, DESPUÉS
+# de que el middleware ya corrió. Por eso se conecta set_current_user() también
+# en la capa de autenticación de DRF.
+
 from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from common.current_user import set_current_user
 
 _LOCAL_SKIP_PREFIXES = ("/admin/", "/swagger/", "/redoc/")
 
@@ -39,4 +47,19 @@ class LocalModeAuthentication(BaseAuthentication):
                 defaults={"email": f"{user_id}@local.test"},
             )
 
+        set_current_user(user)
         return (user, None)
+
+
+class AuditJWTAuthentication(JWTAuthentication):
+    """
+    JWTAuthentication extendido que registra el usuario autenticado en el
+    contexto de auditoría para que BaseAuditModel.save() lo use automáticamente.
+    """
+
+    def authenticate(self, request):
+        result = super().authenticate(request)
+        if result is not None:
+            user, token = result
+            set_current_user(user)
+        return result

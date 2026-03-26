@@ -13,6 +13,15 @@ class BaseAuditModel(models.Model):
     class Meta:
         abstract = True
 
+    def save(self, *args, **kwargs):
+        from common.current_user import get_current_user
+        user = get_current_user()
+        if user is not None:
+            if not self.pk and not self.created_by_id:
+                self.created_by = user
+            self.updated_by = user
+        super().save(*args, **kwargs)
+
 
 class BaseDefinitionModel(models.Model):
     """
