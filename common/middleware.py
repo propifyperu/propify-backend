@@ -2,6 +2,8 @@ import json
 import logging
 import time
 
+from common.current_user import clear_current_user, set_current_user
+
 logger = logging.getLogger("propify.requests")
 
 _SENSITIVE = {"authorization", "password", "token", "secret"}
@@ -37,3 +39,25 @@ class RequestLoggingMiddleware:
 
         logger.info("%s %s → %s (%dms)%s", request.method, request.path, response.status_code, ms, extra)
         return response
+
+
+class CurrentUserMiddleware:
+    """
+    Guarda el usuario autenticado del request en un ContextVar para que
+    BaseAuditModel.save() pueda poblarlo automáticamente en created_by / updated_by.
+
+    NOTA: esto NO aplica a QuerySet.update(...), que bypassa save().
+    En esos casos, created_by / updated_by deben manejarse explícitamente.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if user is not None and user.is_authenticated:
+            set_current_user(user)
+        try:
+            return self.get_response(request)
+        finally:
+            clear_current_user()
