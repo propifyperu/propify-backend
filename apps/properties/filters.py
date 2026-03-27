@@ -1,6 +1,7 @@
 import django_filters
 from django.db.models import Q
 
+from apps.properties.geo import get_bounding_box
 from apps.properties.models import Property
 
 
@@ -36,6 +37,11 @@ class PropertyCardFilter(django_filters.FilterSet):
     built_area_min = django_filters.NumberFilter(field_name="specs__built_area", lookup_expr="gte")
     built_area_max = django_filters.NumberFilter(field_name="specs__built_area", lookup_expr="lte")
 
+    # --- Ubicación (bounding box) ---
+    latitude  = django_filters.NumberFilter(method="filter_by_location")
+    longitude = django_filters.NumberFilter(method="filter_by_location")
+    radius_m  = django_filters.NumberFilter(method="filter_by_location")
+
     class Meta:
         model = Property
         fields = []
@@ -46,4 +52,28 @@ class PropertyCardFilter(django_filters.FilterSet):
             | Q(title__icontains=value)
             | Q(map_address__icontains=value)
             | Q(display_address__icontains=value)
+        )
+
+    def filter_by_location(self, queryset, name, value):
+        # Se aplica solo cuando los 3 params están presentes; se dispara una vez por param
+        # pero solo actúa en la última llamada cuando ya todos están disponibles.
+        try:
+            lat  = float(self.data.get("latitude",  ""))
+            lon  = float(self.data.get("longitude", ""))
+            rad  = float(self.data.get("radius_m",  ""))
+        except (TypeError, ValueError):
+            return queryset
+
+        # Solo actuar cuando se procesa el último de los tres params para no filtrar 3 veces
+        if name != "radius_m":
+            return queryset
+
+        bbox = get_bounding_box(lat, lon, rad)
+        return queryset.filter(
+            latitude__isnull=False,
+            longitude__isnull=False,
+            latitude__gte=bbox["lat_min"],
+            latitude__lte=bbox["lat_max"],
+            longitude__gte=bbox["lon_min"],
+            longitude__lte=bbox["lon_max"],
         )
