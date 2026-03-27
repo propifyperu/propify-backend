@@ -32,7 +32,11 @@ class EmailOrUsernameTokenSerializer(TokenObtainPairSerializer):
                 attrs[self.username_field] = user.username
             except User.DoesNotExist:
                 pass
-        return super().validate(attrs)
+        data = super().validate(attrs)
+        data["id"] = self.user.id
+        data["username"] = self.user.username
+        data["name"] = self.user.get_full_name() or self.user.username
+        return data
 
 
 # ---------------------------------------------------------------------------
@@ -53,6 +57,9 @@ _token_response = openapi.Schema(
     properties={
         "access": openapi.Schema(type=openapi.TYPE_STRING),
         "refresh": openapi.Schema(type=openapi.TYPE_STRING),
+        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+        "username": openapi.Schema(type=openapi.TYPE_STRING),
+        "name": openapi.Schema(type=openapi.TYPE_STRING),
     },
 )
 
