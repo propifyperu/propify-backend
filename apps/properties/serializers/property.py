@@ -2,7 +2,7 @@ import uuid as uuid_lib
 
 from rest_framework import serializers
 
-from apps.properties.models import Property, PropertyMedia, PropertySpecs, PropertyFinancialInfo, PropertyDocument
+from apps.properties.models import Property, PropertyMedia, PropertySpecs
 from apps.properties.serializers.property_specs import PropertySpecsSerializer
 from apps.properties.serializers.property_media import PropertyMediaSerializer
 from apps.properties.serializers.property_financial_info import PropertyFinancialInfoSerializer
@@ -118,4 +118,40 @@ class PropertyCardSerializer(serializers.ModelSerializer):
             "responsible",
             "specs",
             "media",
+        ]
+
+
+class PropertyWithSpecsSerializer(serializers.ModelSerializer):
+    property_type_name = serializers.CharField(source="property_type.name", read_only=True)
+    property_subtype_name = serializers.CharField(source="property_subtype.name", read_only=True)
+    property_condition_name = serializers.CharField(source="property_condition.name", read_only=True)
+    operation_type_name = serializers.CharField(source="operation_type.name", read_only=True)
+    currency_code = serializers.CharField(source="currency.code", read_only=True)
+    property_status_name = serializers.CharField(source="property_status.name", read_only=True)
+
+    specs = PropertySpecsSerializer(read_only=True)
+
+    class Meta:
+        model = Property
+        fields = [
+            "id",
+            "code",
+            "property_type",
+            "property_type_name",
+            "property_subtype",
+            "property_subtype_name",
+            "property_condition",
+            "property_condition_name",
+            "operation_type",
+            "operation_type_name",
+            "currency",
+            "currency_code",
+            "price",
+            "title",
+            "map_address",
+            "display_address",
+            "property_status",
+            "property_status_name",
+            "responsible",
+            "specs",
         ]
