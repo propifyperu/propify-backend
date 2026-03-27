@@ -1,5 +1,4 @@
 import json
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
@@ -7,7 +6,6 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from apps.properties.filters import PropertyCardFilter
 from apps.properties.models import Property, PropertyDocument, PropertyFinancialInfo, PropertyMedia, PropertySpecs
 from apps.properties.pagination import PropertyCardPagination
@@ -63,18 +61,18 @@ class PropertyViewSet(
     @swagger_auto_schema(
         tags=["Propiedades"],
         operation_summary="Listado de tarjetas de propiedades",
-        operation_description="Devuelve propiedades paginadas y permite filtrado por catálogos, búsqueda simple, precio y specs.",
+        operation_description="Devuelve propiedades paginadas y permite filtrado por catálogos, búsqueda simple, precio, specs y ubicación.",
         manual_parameters=[
-            openapi.Parameter("property_type",      openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("property_subtype",   openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("property_condition", openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("operation_type",     openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("currency",           openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("property_status",    openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("district",           openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("urbanization",       openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("responsible",        openapi.IN_QUERY, type=openapi.TYPE_STRING, description="ID o IDs separados por coma"),
-            openapi.Parameter("search",             openapi.IN_QUERY, type=openapi.TYPE_STRING, description="Busca en code, title, map_address, display_address"),
+            openapi.Parameter("property_type",      openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("property_subtype",   openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("property_condition", openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("operation_type",     openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("currency",           openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("property_status",    openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("district",           openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("urbanization",       openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("responsible",        openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("search",             openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="Busca en code, title, map_address, display_address"),
             openapi.Parameter("price_min",          openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
             openapi.Parameter("price_max",          openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
             openapi.Parameter("bedrooms_min",       openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
@@ -83,6 +81,9 @@ class PropertyViewSet(
             openapi.Parameter("land_area_max",      openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
             openapi.Parameter("built_area_min",     openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
             openapi.Parameter("built_area_max",     openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
+            openapi.Parameter("latitude",           openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Latitud del punto central. Requiere longitude y radius_m."),
+            openapi.Parameter("longitude",          openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Longitud del punto central. Requiere latitude y radius_m."),
+            openapi.Parameter("radius_m",           openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Radio en metros. Filtra propiedades cercanas usando una aproximación por bounding box."),
             openapi.Parameter("page",               openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
         ],
     )
@@ -98,15 +99,16 @@ class PropertyViewSet(
             .prefetch_related("media")
         )
 
-        # Filtros
-        filterset = PropertyCardFilter(request.query_params, queryset=qs, request=request)
-        qs = filterset.qs
+        qs = PropertyCardFilter(request.query_params, queryset=qs, request=request).qs
 
-        # Paginación específica para cards
         paginator = PropertyCardPagination()
         page = paginator.paginate_queryset(qs, request, view=self)
-        serializer = PropertyCardSerializer(page, many=True, context={"request": request})
-        return paginator.get_paginated_response(serializer.data)
+        if page is not None:
+            serializer = PropertyCardSerializer(page, many=True, context={"request": request})
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = PropertyCardSerializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
 
     @swagger_auto_schema(
         tags=["Propiedades"],
@@ -173,6 +175,7 @@ class PropertyViewSet(
         ],
         consumes=["multipart/form-data"],
     )
+
     @action(detail=False, methods=["post"], url_path="create-full")
     def create_full(self, request):
         import uuid as uuid_lib

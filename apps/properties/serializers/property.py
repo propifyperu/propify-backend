@@ -91,7 +91,6 @@ class PropertyCardSerializer(serializers.ModelSerializer):
     operation_type_name = serializers.CharField(source="operation_type.name", read_only=True, allow_null=True, default=None)
     currency_code = serializers.CharField(source="currency.code", read_only=True, allow_null=True, default=None)
     property_status_name = serializers.CharField(source="property_status.name", read_only=True, allow_null=True, default=None)
-
     specs = PropertyCardSpecsSerializer(read_only=True)
     media = PropertyCardMediaSerializer(many=True, read_only=True)
 
