@@ -295,6 +295,32 @@ class PropertyViewSet(
         serializer = PropertyLandingDetailSerializer(instance, context={"request": request})
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        tags=["Propiedades"],
+        operation_summary="Obtener code y title por wp_slug",
+        operation_description="Endpoint público que busca una propiedad por wp_slug y devuelve solo code y title.",
+        manual_parameters=[
+            openapi.Parameter(
+                "wp_slug", openapi.IN_QUERY,
+                description="Slug de WordPress de la propiedad (ej: propify-97)",
+                type=openapi.TYPE_STRING,
+                required=True,
+            ),
+        ],
+    )
+    @action(detail=False, methods=["get"], url_path="wp", permission_classes=[AllowAny])
+    def wp(self, request):
+        wp_slug = request.query_params.get("wp_slug")
+        if not wp_slug:
+            return Response({"detail": "El parámetro 'wp_slug' es obligatorio."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            instance = Property.objects.get(wp_slug=wp_slug)
+        except Property.DoesNotExist:
+            return Response({"detail": "No encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"code": instance.code, "title": instance.title})
+
     # ---------------------------------------------------------------------------
     # Helpers internos
     # ---------------------------------------------------------------------------
