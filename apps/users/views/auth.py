@@ -36,6 +36,8 @@ class EmailOrUsernameTokenSerializer(TokenObtainPairSerializer):
         data["id"] = self.user.id
         data["username"] = self.user.username
         data["name"] = self.user.get_full_name() or self.user.username
+        data["role"] = self.user.role.name if self.user.role_id else None
+        data["area"] = self.user.role.area.name if self.user.role_id else None
         return data
 
 
@@ -60,6 +62,8 @@ _token_response = openapi.Schema(
         "id": openapi.Schema(type=openapi.TYPE_INTEGER),
         "username": openapi.Schema(type=openapi.TYPE_STRING),
         "name": openapi.Schema(type=openapi.TYPE_STRING),
+        "role": openapi.Schema(type=openapi.TYPE_STRING),
+        "area": openapi.Schema(type=openapi.TYPE_STRING),
     },
 )
 
