@@ -4,7 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from apps.properties.filters import PropertyCardFilter
 from apps.properties.models import Property, PropertyDocument, PropertyFinancialInfo, PropertyMedia, PropertySpecs
@@ -13,6 +13,7 @@ from apps.properties.serializers import PropertySerializer
 from apps.properties.serializers.property import (
     PropertyCardSerializer,
     PropertyFullDetailSerializer,
+    PropertyLandingDetailSerializer,
 )
 
 
@@ -254,6 +255,44 @@ class PropertyViewSet(
         prop.refresh_from_db()
         output = PropertyFullDetailSerializer(prop, context={"request": request})
         return Response(output.data, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        tags=["Propiedades"],
+        operation_summary="Detalle público de propiedad para landing",
+        operation_description="Retorna el detalle público de una propiedad para landing page, buscando por code. No incluye financial ni documents.",
+        manual_parameters=[
+            openapi.Parameter(
+                "code", openapi.IN_QUERY,
+                description="Código único de la propiedad (ej: PROP000093)",
+                type=openapi.TYPE_STRING,
+                required=True,
+            ),
+        ],
+    )
+    @action(detail=False, methods=["get"], url_path="landing-detail", permission_classes=[AllowAny])
+    def landing_detail(self, request):
+        code = request.query_params.get("code")
+        if not code:
+            return Response({"detail": "El parámetro 'code' es obligatorio."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            instance = (
+                Property.objects
+                .select_related(
+                    "property_type", "property_subtype", "property_condition",
+                    "operation_type", "currency", "payment_method",
+                    "district", "urbanization", "property_status", "responsible",
+                    "specs",
+                )
+                .prefetch_related("media")
+                .exclude(property_status_id=6)
+                .get(code=code)
+            )
+        except Property.DoesNotExist:
+            return Response({"detail": "No encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PropertyLandingDetailSerializer(instance, context={"request": request})
+        return Response(serializer.data)
 
     # ---------------------------------------------------------------------------
     # Helpers internos
