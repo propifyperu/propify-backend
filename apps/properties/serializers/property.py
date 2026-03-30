@@ -72,6 +72,23 @@ class PropertyFullDetailSerializer(serializers.ModelSerializer):
 
 
 
+class PropertyLandingDetailSerializer(serializers.ModelSerializer):
+    property_type_name = serializers.CharField(source="property_type.name", read_only=True, allow_null=True, default=None)
+    property_subtype_name = serializers.CharField(source="property_subtype.name", read_only=True, allow_null=True, default=None)
+    property_condition_name = serializers.CharField(source="property_condition.name", read_only=True, allow_null=True, default=None)
+    operation_type_name = serializers.CharField(source="operation_type.name", read_only=True, allow_null=True, default=None)
+    currency_code = serializers.CharField(source="currency.code", read_only=True, allow_null=True, default=None)
+    payment_method_name = serializers.CharField(source="payment_method.name", read_only=True, allow_null=True, default=None)
+    property_status_name = serializers.CharField(source="property_status.name", read_only=True, allow_null=True, default=None)
+
+    specs = PropertySpecsSerializer(read_only=True)
+    media = PropertyMediaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Property
+        fields = "__all__"
+
+
 class PropertyCardSpecsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertySpecs
