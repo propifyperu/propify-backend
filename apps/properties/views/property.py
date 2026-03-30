@@ -85,6 +85,7 @@ class PropertyViewSet(
             openapi.Parameter("latitude",           openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Latitud del punto central. Requiere longitude y radius_m."),
             openapi.Parameter("longitude",          openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Longitud del punto central. Requiere latitude y radius_m."),
             openapi.Parameter("radius_m",           openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Radio en metros. Filtra propiedades cercanas usando una aproximación por bounding box."),
+            openapi.Parameter("created_last_days",  openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description="Filtra propiedades creadas en los últimos N días. Ej: 7"),
             openapi.Parameter("page",               openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
         ],
     )

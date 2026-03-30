@@ -1,5 +1,8 @@
 import django_filters
+from datetime import timedelta
+
 from django.db.models import Q
+from django.utils import timezone
 
 from apps.properties.geo import get_bounding_box
 from apps.properties.models import Property
@@ -37,6 +40,9 @@ class PropertyCardFilter(django_filters.FilterSet):
     built_area_min = django_filters.NumberFilter(field_name="specs__built_area", lookup_expr="gte")
     built_area_max = django_filters.NumberFilter(field_name="specs__built_area", lookup_expr="lte")
 
+    # --- Fecha de creación ---
+    created_last_days = django_filters.NumberFilter(method="filter_created_last_days")
+
     # --- Ubicación (bounding box) ---
     latitude  = django_filters.NumberFilter(method="filter_by_location")
     longitude = django_filters.NumberFilter(method="filter_by_location")
@@ -45,6 +51,16 @@ class PropertyCardFilter(django_filters.FilterSet):
     class Meta:
         model = Property
         fields = []
+
+    def filter_created_last_days(self, queryset, name, value):
+        try:
+            days = int(value)
+        except (TypeError, ValueError):
+            return queryset
+        if days <= 0:
+            return queryset
+        since = timezone.now() - timedelta(days=days)
+        return queryset.filter(created_at__gte=since)
 
     def filter_search(self, queryset, name, value):
         return queryset.filter(
