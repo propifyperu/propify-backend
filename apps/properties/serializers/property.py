@@ -80,6 +80,7 @@ class PropertyLandingDetailSerializer(serializers.ModelSerializer):
     currency_code = serializers.CharField(source="currency.code", read_only=True, allow_null=True, default=None)
     payment_method_name = serializers.CharField(source="payment_method.name", read_only=True, allow_null=True, default=None)
     property_status_name = serializers.CharField(source="property_status.name", read_only=True, allow_null=True, default=None)
+    district_name = serializers.CharField(source="district.name", read_only=True, allow_null=True, default=None)
 
     specs = PropertySpecsSerializer(read_only=True)
     media = PropertyMediaSerializer(many=True, read_only=True)
