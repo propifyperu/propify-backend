@@ -7,6 +7,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from apps.properties.filters import PropertyCardFilter
+from common.images import convert_uploaded_image_to_webp
 from apps.properties.models import Property, PropertyDocument, PropertyFinancialInfo, PropertyMedia, PropertySpecs
 from apps.properties.pagination import PropertyCardPagination
 from apps.properties.serializers import PropertySerializer
@@ -235,7 +236,9 @@ class PropertyViewSet(
             for file, meta in zip(media_files, media_metadata):
                 PropertyMedia.objects.create(
                     property=prop,
-                    file=file,
+                    file=convert_uploaded_image_to_webp(file) 
+                         if meta.get("media_type", "image") == "image" 
+                         else file,
                     media_type=meta.get("media_type", "image"),
                     title=meta.get("title"),
                     label=meta.get("label"),
@@ -538,7 +541,9 @@ class PropertyViewSet(
             for file, meta in zip(media_files, media_metadata):
                 PropertyMedia.objects.create(
                     property=prop,
-                    file=file,
+                    file=convert_uploaded_image_to_webp(file) 
+                         if meta.get("media_type", "image") == "image" 
+                         else file,
                     media_type=meta.get("media_type", "image"),
                     title=meta.get("title"),
                     label=meta.get("label"),

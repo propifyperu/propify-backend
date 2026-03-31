@@ -10,6 +10,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from common.images import convert_uploaded_image_to_webp
 from apps.properties.models import Property, PropertyMedia
 from apps.properties.serializers.property_media import PropertyMediaSerializer, PropertyWithMediaSerializer
 
@@ -73,10 +74,13 @@ class PropertyMediaViewSet(
             })
 
         with transaction.atomic():
+            # Convertimos a WebP solo si el media_type es 'image'
             created = [
                 PropertyMedia.objects.create(
                     property=prop,
-                    file=file,
+                    file=convert_uploaded_image_to_webp(file) 
+                         if meta.get("media_type", "image") == "image" 
+                         else file,
                     media_type=meta.get("media_type", "image"),
                     title=meta.get("title"),
                     label=meta.get("label"),
@@ -136,7 +140,7 @@ class PropertyMediaViewSet(
                 try:
                     media_obj = PropertyMedia.objects.get(id=media_id, property=prop)
                 except PropertyMedia.DoesNotExist:
-                    raise ValidationError({"detail": f"El media {media_id} no pertenece a esta propiedad."})
+                    raise ValidationError({"existing_media": f"El ID {media_id} no existe o no pertenece a esta propiedad."})
                 for field in ("title", "label", "order", "media_type"):
                     if field in item:
                         setattr(media_obj, field, item[field])
@@ -145,7 +149,9 @@ class PropertyMediaViewSet(
             for file, meta in zip(media_files, media_metadata):
                 PropertyMedia.objects.create(
                     property=prop,
-                    file=file,
+                    file=convert_uploaded_image_to_webp(file) 
+                         if meta.get("media_type", "image") == "image" 
+                         else file,
                     media_type=meta.get("media_type", "image"),
                     title=meta.get("title"),
                     label=meta.get("label"),
