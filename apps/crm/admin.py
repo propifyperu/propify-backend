@@ -16,14 +16,17 @@ from .models import (
 # Contact
 # ---------------------------------------------------------------------------
 
+
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "contact_type", "phone", "email", "is_active", "assigned_agent", "created_at")
+    list_display = ("id", "full_name", "contact_type", "phone", "email", "is_active","assigned_agents_list", "created_at")
     list_filter = ("is_active", "contact_type", "document_type", "gender")
     search_fields = ("full_name", "phone", "email", "document_number")
     autocomplete_fields = ("assigned_agent",)
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
-
+    def assigned_agents_list(self, obj):
+        return ", ".join(obj.assigned_agent.values_list("username", flat=True))
+    assigned_agents_list.short_description = "Assigned agents"
 
 # ---------------------------------------------------------------------------
 # Lead
