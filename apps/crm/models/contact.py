@@ -22,7 +22,6 @@ class Contact(BaseAuditModel):
     assigned_agent = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         blank=True,
-        null=True,
         related_name="assigned_contacts",
     )
     first_name = models.CharField(max_length=255, null=True, blank=True)
