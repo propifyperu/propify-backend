@@ -15,7 +15,7 @@ class ContactViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = Contact.objects.all()
+    queryset = Contact.objects.prefetch_related("assigned_agent").all()
     serializer_class = ContactSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
@@ -29,9 +29,22 @@ class ContactViewSet(
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=["CRM"], operation_summary="Crear contacto")
+    @swagger_auto_schema(
+        tags=["CRM"],
+        operation_summary="Crear contacto",
+        operation_description=(
+            "Crea un contacto. Soporta multipart/form-data para enviar `photo` como archivo.\n\n"
+            "El usuario autenticado se asigna automáticamente como `assigned_agent`; "
+            "no es necesario (ni posible) enviarlo desde el frontend."
+        ),
+        consumes=["multipart/form-data"],
+    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        contact = serializer.save()
+        contact.assigned_agent.add(self.request.user)
 
     @swagger_auto_schema(tags=["CRM"], operation_summary="Actualizar contacto parcialmente")
     def partial_update(self, request, *args, **kwargs):
