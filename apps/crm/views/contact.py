@@ -1,9 +1,10 @@
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
-
+from rest_framework.decorators import action
 from apps.crm.models import Contact
 from apps.crm.serializers import ContactSerializer
+from rest_framework.response import Response
 
 
 class ContactViewSet(
@@ -34,3 +35,15 @@ class ContactViewSet(
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=["CRM"],
+        operation_summary="Listar mis contactos",
+        operation_description="Retorna solo los contactos cuyo assigned_agent es el usuario autenticado.",
+    )
+    
+    @action(detail=False, methods=["get"], url_path="my-contacts")
+    def my_contacts(self, request):
+        qs = Contact.objects.filter(assigned_agent=request.user).order_by("first_name")
+        serializer = ContactSerializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
