@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from apps.users.serializers import UserMeSerializer
+from apps.users.serializers import UserMeSerializer, UserDetailSerializer
 
 User = get_user_model()
 
@@ -105,5 +105,5 @@ class MeView(APIView):
         responses={200: UserMeSerializer()},
     )
     def get(self, request):
-        serializer = UserMeSerializer(request.user)
+        serializer = UserDetailSerializer(request.user)
         return Response(serializer.data)
