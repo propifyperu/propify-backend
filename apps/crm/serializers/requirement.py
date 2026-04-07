@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.crm.models import Requirement
+from apps.crm.validators import validate_requirement_create, validate_requirement_update
 from apps.locations.models import District, Urbanization
 
 
@@ -33,4 +34,15 @@ class RequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requirement
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id", "created_at", "updated_at",
+            "source_group", "source_date", "notes_message_ws",
+            "import_batch", "import_row_sig", "is_active",
+        ]
+
+    def validate(self, data):
+        if self.instance is None:
+            validate_requirement_create(data)
+        else:
+            validate_requirement_update(self.instance, data)
+        return data

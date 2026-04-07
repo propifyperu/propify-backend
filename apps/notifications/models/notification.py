@@ -15,6 +15,7 @@ class Notification(models.Model):
     object_id = models.PositiveIntegerField(null=True, blank=True)
     source_object = GenericForeignKey("content_type", "object_id")
 
+    link = models.TextField(blank=True, null=True)
     data = models.JSONField(default=dict, blank=True)
 
     is_read = models.BooleanField(default=False, db_index=True)

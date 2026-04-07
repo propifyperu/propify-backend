@@ -26,3 +26,5 @@ staticfiles/
 Thumbs.db
 
 .qodo
+db.sqlite3
+*.sqlite3
