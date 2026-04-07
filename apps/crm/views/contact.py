@@ -46,7 +46,16 @@ class ContactViewSet(
         contact = serializer.save()
         contact.assigned_agent.add(self.request.user)
 
-    @swagger_auto_schema(tags=["CRM"], operation_summary="Actualizar contacto parcialmente")
+    @swagger_auto_schema(
+        tags=["CRM"],
+        operation_summary="Actualizar contacto parcialmente",
+        operation_description=(
+            "Actualiza parcialmente un contacto. Soporta multipart/form-data.\n\n"
+            "- `photo` puede enviarse como archivo; si no se envía, la foto actual no se modifica.\n"
+            "- `assigned_agent` no puede editarse desde este endpoint; se ignora si viene en el request."
+        ),
+        consumes=["multipart/form-data"],
+    )
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
         return super().update(request, *args, **kwargs)
