@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from common.models import BaseAuditModel
 
 
@@ -35,6 +36,13 @@ class Event(BaseAuditModel):
 
     status = models.CharField(max_length=20, choices=EventStatus.choices, default=EventStatus.PENDING, db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            from django.utils.crypto import get_random_string
+            year = timezone.now().year
+            self.code = f"EVT-{year}{get_random_string(8).upper()}"
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = "event"
