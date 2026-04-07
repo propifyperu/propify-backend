@@ -1,14 +1,56 @@
 import django_filters
-from datetime import timedelta
+from datetime import date as date_cls, timedelta
 
 from django.db.models import Q
 
-from apps.crm.models import Contact, Event
+from apps.crm.models import Contact, Event, Requirement
 
 
 class _CommaSeparatedIDFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
     """Acepta un único ID o varios separados por coma: ?event_type=1  o  ?event_type=1,2,3"""
     pass
+
+
+def _apply_date_mode(queryset, data, date_field):
+    """
+    Aplica filtro de fecha sobre `date_field` según date_mode.
+    Reutilizable por cualquier FilterSet que lo invoque.
+    """
+    mode      = data.get("date_mode", "")
+    date_str  = data.get("date", "")
+    date_from = data.get("date_from", "")
+    date_to   = data.get("date_to", "")
+
+    try:
+        if mode == "day":
+            d = date_cls.fromisoformat(date_str)
+            return queryset.filter(**{f"{date_field}__date": d})
+
+        if mode == "week":
+            d = date_cls.fromisoformat(date_str)
+            week_start = d - timedelta(days=d.weekday())
+            week_end   = week_start + timedelta(days=6)
+            return queryset.filter(**{
+                f"{date_field}__date__gte": week_start,
+                f"{date_field}__date__lte": week_end,
+            })
+
+        if mode == "month":
+            d = date_cls.fromisoformat(date_str)
+            return queryset.filter(**{f"{date_field}__year": d.year, f"{date_field}__month": d.month})
+
+        if mode == "range":
+            d_from = date_cls.fromisoformat(date_from)
+            d_to   = date_cls.fromisoformat(date_to)
+            return queryset.filter(**{
+                f"{date_field}__date__gte": d_from,
+                f"{date_field}__date__lte": d_to,
+            })
+
+    except (ValueError, TypeError):
+        pass
+
+    return queryset
 
 
 class ContactFilter(django_filters.FilterSet):
@@ -36,7 +78,6 @@ class EventFilter(django_filters.FilterSet):
     property       = _CommaSeparatedIDFilter(field_name="property_id")
     status         = django_filters.CharFilter(field_name="status")
 
-    # date params (usados por el método custom)
     date_mode  = django_filters.CharFilter(method="filter_by_date")
     date       = django_filters.CharFilter(method="filter_by_date")
     date_from  = django_filters.CharFilter(method="filter_by_date")
@@ -47,37 +88,50 @@ class EventFilter(django_filters.FilterSet):
         fields = []
 
     def filter_by_date(self, queryset, name, value):
-        # Se ejecuta una vez por param; solo actuamos cuando procesamos date_mode
         if name != "date_mode":
             return queryset
+        return _apply_date_mode(queryset, self.data, "start_time")
 
-        mode      = self.data.get("date_mode", "")
-        date_str  = self.data.get("date", "")
-        date_from = self.data.get("date_from", "")
-        date_to   = self.data.get("date_to", "")
 
-        try:
-            from datetime import date as date_cls
-            if mode == "day":
-                d = date_cls.fromisoformat(date_str)
-                return queryset.filter(start_time__date=d)
+class RequirementFilter(django_filters.FilterSet):
+    assigned_to        = _CommaSeparatedIDFilter(field_name="assigned_to_id")
+    lead               = _CommaSeparatedIDFilter(field_name="lead_id")
+    operation_type     = _CommaSeparatedIDFilter(field_name="operation_type_id")
+    property_type      = _CommaSeparatedIDFilter(field_name="property_type_id")
+    property_subtype   = _CommaSeparatedIDFilter(field_name="property_subtype_id")
+    property_condition = _CommaSeparatedIDFilter(field_name="property_condition_id")
+    currency           = _CommaSeparatedIDFilter(field_name="currency_id")
+    payment_method     = _CommaSeparatedIDFilter(field_name="payment_method_id")
 
-            if mode == "week":
-                d = date_cls.fromisoformat(date_str)
-                week_start = d - timedelta(days=d.weekday())
-                week_end   = week_start + timedelta(days=6)
-                return queryset.filter(start_time__date__gte=week_start, start_time__date__lte=week_end)
+    districts     = django_filters.CharFilter(method="filter_districts")
+    urbanizations = django_filters.CharFilter(method="filter_urbanizations")
 
-            if mode == "month":
-                d = date_cls.fromisoformat(date_str)
-                return queryset.filter(start_time__year=d.year, start_time__month=d.month)
+    has_elevator       = django_filters.BooleanFilter(field_name="has_elevator")
+    pet_friendly       = django_filters.BooleanFilter(field_name="pet_friendly")
+    ordering           = django_filters.OrderingFilter(fields=["created_at"])
 
-            if mode == "range":
-                d_from = date_cls.fromisoformat(date_from)
-                d_to   = date_cls.fromisoformat(date_to)
-                return queryset.filter(start_time__date__gte=d_from, start_time__date__lte=d_to)
+    date_mode  = django_filters.CharFilter(method="filter_by_date")
+    date       = django_filters.CharFilter(method="filter_by_date")
+    date_from  = django_filters.CharFilter(method="filter_by_date")
+    date_to    = django_filters.CharFilter(method="filter_by_date")
 
-        except (ValueError, TypeError):
-            pass
+    class Meta:
+        model = Requirement
+        fields = []
 
-        return queryset
+    def filter_districts(self, queryset, name, value):
+        values = [v.strip() for v in str(value).split(",") if v.strip()]
+        if not values:
+            return queryset
+        return queryset.filter(districts__id__in=values).distinct()
+
+    def filter_urbanizations(self, queryset, name, value):
+        values = [v.strip() for v in str(value).split(",") if v.strip()]
+        if not values:
+            return queryset
+        return queryset.filter(urbanizations__id__in=values).distinct()
+
+    def filter_by_date(self, queryset, name, value):
+        if name != "date_mode":
+            return queryset
+        return _apply_date_mode(queryset, self.data, "created_at")
