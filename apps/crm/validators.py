@@ -36,3 +36,47 @@ def validate_event_update(instance, data):
 
     if start_time and end_time and end_time <= start_time:
         raise ValidationError({"end_time": "Debe ser mayor que start_time."})
+
+
+# ---------------------------------------------------------------------------
+# Requirement
+# ---------------------------------------------------------------------------
+
+_RANGE_PAIRS = [
+    ("price_min",          "price_max"),
+    ("antiquity_years_min","antiquity_years_max"),
+    ("floors_min",         "floors_max"),
+    ("bedrooms_min",       "bedrooms_max"),
+    ("bathrooms_min",      "bathrooms_max"),
+    ("garage_spaces_min",  "garage_spaces_max"),
+    ("land_area_min",      "land_area_max"),
+    ("built_area_min",     "built_area_max"),
+]
+
+
+def _validate_ranges(data, instance=None):
+    errors = {}
+    for min_field, max_field in _RANGE_PAIRS:
+        v_min = data.get(min_field, getattr(instance, min_field, None) if instance else None)
+        v_max = data.get(max_field, getattr(instance, max_field, None) if instance else None)
+        if v_min is not None and v_max is not None and v_min > v_max:
+            errors[max_field] = f"Debe ser mayor o igual que {min_field}."
+    if errors:
+        raise ValidationError(errors)
+
+
+def validate_requirement_create(data):
+    required_fields = ["operation_type", "property_type", "price_min", "price_max"]
+    errors = {}
+    for field in required_fields:
+        if not data.get(field):
+            errors[field] = "Este campo es obligatorio."
+    if not data.get("districts"):
+        errors["districts"] = "Debe incluir al menos un distrito."
+    if errors:
+        raise ValidationError(errors)
+    _validate_ranges(data)
+
+
+def validate_requirement_update(instance, data):
+    _validate_ranges(data, instance=instance)
