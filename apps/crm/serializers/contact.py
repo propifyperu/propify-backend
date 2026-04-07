@@ -4,6 +4,8 @@ from apps.crm.models import Contact
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(read_only=True)
+
     class Meta:
         model = Contact
         fields = "__all__"

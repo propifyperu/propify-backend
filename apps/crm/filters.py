@@ -1,12 +1,33 @@
 import django_filters
 from datetime import timedelta
 
-from apps.crm.models import Event
+from django.db.models import Q
+
+from apps.crm.models import Contact, Event
 
 
 class _CommaSeparatedIDFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
     """Acepta un único ID o varios separados por coma: ?event_type=1  o  ?event_type=1,2,3"""
     pass
+
+
+class ContactFilter(django_filters.FilterSet):
+    full_name     = django_filters.CharFilter(method="filter_full_name")
+    email         = django_filters.CharFilter(field_name="email",         lookup_expr="icontains")
+    phone         = django_filters.CharFilter(field_name="phone",         lookup_expr="icontains")
+    document_type = django_filters.CharFilter(field_name="document_type", lookup_expr="exact")
+    ordering      = django_filters.OrderingFilter(fields=["created_at"])
+
+    class Meta:
+        model = Contact
+        fields = []
+
+    def filter_full_name(self, queryset, name, value):
+        terms = value.split()
+        q = Q()
+        for term in terms:
+            q &= Q(first_name__icontains=term) | Q(last_name__icontains=term)
+        return queryset.filter(q)
 
 
 class EventFilter(django_filters.FilterSet):
