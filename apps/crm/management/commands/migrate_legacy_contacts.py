@@ -165,7 +165,6 @@ class Command(BaseCommand):
                 doc_value = normalize_document_type(maybe_decrypt(document_type_name))
 
                 defaults = {
-                    "assigned_agent": None,
                     "first_name": fn,
                     "last_name": ln,
                     "document_type": doc_value,

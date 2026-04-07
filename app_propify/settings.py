@@ -131,48 +131,51 @@ WSGI_APPLICATION = 'app_propify.wsgi.application'
 USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() in ("true", "1", "yes")
 
 if USE_SQLITE:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / os.getenv("SQLITE_NAME", "db.sqlite3"),
-        }
+    default_db = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / os.getenv("SQLITE_NAME", "db.sqlite3"),
     }
 else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "mssql",
-            "NAME": os.getenv("DB_NAME"),
-            "USER": os.getenv("DB_USER"),
-            "PASSWORD": os.getenv("DB_PASS"),
-            "HOST": os.getenv("DB_HOST"),
-            "PORT": os.getenv("DB_PORT", "1433"),
-            "CONN_MAX_AGE": 60,
-            "OPTIONS": {
-                "driver": os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server"),
-                "extra_params": os.getenv(
-                    "DB_EXTRA_PARAMS",
-                    "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
-                ),
-            },
-        },
-        "legacy": {
-            "ENGINE": "mssql",
-            "NAME": os.getenv("LEGACY_DB_NAME"),
-            "USER": os.getenv("LEGACY_DB_USER"),
-            "PASSWORD": os.getenv("LEGACY_DB_PASS"),
-            "HOST": os.getenv("LEGACY_DB_HOST"),
-            "PORT": os.getenv("LEGACY_DB_PORT", "1433"),
-            "CONN_MAX_AGE": 60,
-            "OPTIONS": {
-                "driver": os.getenv("LEGACY_DB_DRIVER", "ODBC Driver 18 for SQL Server"),
-                "extra_params": os.getenv(
-                    "LEGACY_DB_EXTRA_PARAMS",
-                    "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
-                ),
-            },
+    default_db = {
+        "ENGINE": "mssql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASS"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT", "1433"),
+        "CONN_MAX_AGE": 60,
+        "OPTIONS": {
+            "driver": os.getenv("DB_DRIVER", "ODBC Driver 18 for SQL Server"),
+            "extra_params": os.getenv(
+                "DB_EXTRA_PARAMS",
+                "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
+            ),
         },
     }
 
+DATABASES = {
+    "default": default_db,
+}
+
+# Mantener legacy disponible también en local con SQLite,
+# siempre que estén definidas las variables LEGACY_DB_*.
+if os.getenv("LEGACY_DB_NAME"):
+    DATABASES["legacy"] = {
+        "ENGINE": "mssql",
+        "NAME": os.getenv("LEGACY_DB_NAME"),
+        "USER": os.getenv("LEGACY_DB_USER"),
+        "PASSWORD": os.getenv("LEGACY_DB_PASS"),
+        "HOST": os.getenv("LEGACY_DB_HOST"),
+        "PORT": os.getenv("LEGACY_DB_PORT", "1433"),
+        "CONN_MAX_AGE": 60,
+        "OPTIONS": {
+            "driver": os.getenv("LEGACY_DB_DRIVER", "ODBC Driver 18 for SQL Server"),
+            "extra_params": os.getenv(
+                "LEGACY_DB_EXTRA_PARAMS",
+                "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
+            ),
+        },
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
