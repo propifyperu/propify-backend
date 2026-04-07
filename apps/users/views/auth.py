@@ -38,6 +38,11 @@ class EmailOrUsernameTokenSerializer(TokenObtainPairSerializer):
         data["name"] = self.user.get_full_name() or self.user.username
         data["role"] = self.user.role.name if self.user.role_id else None
         data["area"] = self.user.role.area.name if self.user.role_id else None
+        try:
+            avatar = self.user.profile.avatar_url
+            data["avatar_url"] = avatar.url if avatar else None
+        except Exception:
+            data["avatar_url"] = None
         return data
 
 
@@ -64,6 +69,7 @@ _token_response = openapi.Schema(
         "name": openapi.Schema(type=openapi.TYPE_STRING),
         "role": openapi.Schema(type=openapi.TYPE_STRING),
         "area": openapi.Schema(type=openapi.TYPE_STRING),
+        "avatar_url": openapi.Schema(type=openapi.TYPE_STRING, description="URL del avatar del usuario, o null si no tiene"),
     },
 )
 
