@@ -115,6 +115,61 @@ class PropertyViewSet(
 
     @swagger_auto_schema(
         tags=["Propiedades"],
+        operation_summary="Mis propiedades (tarjetas)",
+        operation_description="Igual que 'cards' pero limitado a propiedades donde el usuario autenticado es el responsable.",
+        manual_parameters=[
+            openapi.Parameter("property_type",      openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("property_subtype",   openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("property_condition", openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("operation_type",     openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("currency",           openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("property_status",    openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("district",           openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("urbanization",       openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="ID o IDs separados por coma"),
+            openapi.Parameter("search",             openapi.IN_QUERY, type=openapi.TYPE_STRING,  description="Busca en code, title, map_address, display_address"),
+            openapi.Parameter("price_min",          openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
+            openapi.Parameter("price_max",          openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
+            openapi.Parameter("bedrooms_min",       openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+            openapi.Parameter("bathrooms_min",      openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+            openapi.Parameter("land_area_min",      openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
+            openapi.Parameter("land_area_max",      openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
+            openapi.Parameter("built_area_min",     openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
+            openapi.Parameter("built_area_max",     openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
+            openapi.Parameter("latitude",           openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Latitud del punto central. Requiere longitude y radius_m."),
+            openapi.Parameter("longitude",          openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Longitud del punto central. Requiere latitude y radius_m."),
+            openapi.Parameter("radius_m",           openapi.IN_QUERY, type=openapi.TYPE_NUMBER,  description="Radio en metros. Filtra propiedades cercanas usando una aproximación por bounding box."),
+            openapi.Parameter("created_last_days",  openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description="Filtra propiedades creadas en los últimos N días. Ej: 7"),
+            openapi.Parameter("page",               openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+        ],
+    )
+    @action(detail=False, methods=["get"], url_path="my-properties")
+    def my_properties(self, request):
+        qs = (
+            Property.objects
+            .select_related(
+                "property_type", "property_subtype", "property_condition",
+                "operation_type", "currency", "property_status", "responsible",
+                "specs",
+            )
+            .prefetch_related("media")
+            .filter(responsible=request.user)
+        )
+
+        params = request.query_params.copy()
+        params.pop("responsible", None)
+        qs = PropertyCardFilter(params, queryset=qs, request=request).qs
+
+        paginator = PropertyCardPagination()
+        page = paginator.paginate_queryset(qs, request, view=self)
+        if page is not None:
+            serializer = PropertyCardSerializer(page, many=True, context={"request": request})
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = PropertyCardSerializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        tags=["Propiedades"],
         operation_summary="Detalle completo de propiedad",
         operation_description="Retorna la propiedad con todos sus sub-objetos anidados: specs, financial, media y documents.",
     )
