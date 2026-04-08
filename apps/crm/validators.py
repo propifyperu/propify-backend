@@ -80,3 +80,15 @@ def validate_requirement_create(data):
 
 def validate_requirement_update(instance, data):
     _validate_ranges(data, instance=instance)
+
+
+# ---------------------------------------------------------------------------
+# Lead
+# ---------------------------------------------------------------------------
+
+def validate_lead_create(data):
+    pass
+
+
+def validate_lead_update(instance, data):
+    pass

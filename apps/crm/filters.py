@@ -3,7 +3,7 @@ from datetime import date as date_cls, timedelta
 
 from django.db.models import Q
 
-from apps.crm.models import Contact, Event, Requirement
+from apps.crm.models import Contact, Event, Lead, Requirement
 
 
 class _CommaSeparatedIDFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
@@ -150,3 +150,46 @@ class RequirementFilter(django_filters.FilterSet):
         if name != "date_mode":
             return queryset
         return _apply_date_mode(queryset, self.data, "created_at")
+
+
+class LeadFilter(django_filters.FilterSet):
+    assigned_to  = _CommaSeparatedIDFilter(field_name="assigned_to_id")
+    lead_status  = _CommaSeparatedIDFilter(field_name="lead_status_id")
+    canal_lead   = _CommaSeparatedIDFilter(field_name="canal_lead_id")
+
+    full_name = django_filters.CharFilter(field_name="full_name", lookup_expr="icontains")
+    phone     = django_filters.CharFilter(field_name="phone",     lookup_expr="icontains")
+    username  = django_filters.CharFilter(field_name="username",  lookup_expr="icontains")
+
+    operation_types = django_filters.CharFilter(method="filter_operation_types")
+    properties      = django_filters.CharFilter(method="filter_properties")
+
+    ordering = django_filters.OrderingFilter(
+        fields=["date_entry", "full_name"],
+    )
+
+    date_mode  = django_filters.CharFilter(method="filter_by_date")
+    date       = django_filters.CharFilter(method="filter_by_date")
+    date_from  = django_filters.CharFilter(method="filter_by_date")
+    date_to    = django_filters.CharFilter(method="filter_by_date")
+
+    class Meta:
+        model = Lead
+        fields = []
+
+    def filter_operation_types(self, queryset, name, value):
+        ids = [v.strip() for v in str(value).split(",") if v.strip()]
+        if not ids:
+            return queryset
+        return queryset.filter(operation_types__id__in=ids).distinct()
+
+    def filter_properties(self, queryset, name, value):
+        ids = [v.strip() for v in str(value).split(",") if v.strip()]
+        if not ids:
+            return queryset
+        return queryset.filter(properties__id__in=ids).distinct()
+
+    def filter_by_date(self, queryset, name, value):
+        if name != "date_mode":
+            return queryset
+        return _apply_date_mode(queryset, self.data, "date_entry")
