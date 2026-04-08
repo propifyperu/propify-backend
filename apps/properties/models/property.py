@@ -79,7 +79,7 @@ class Property(BaseAuditModel):
         related_name="responsible_properties",
     )
 
-    code = models.CharField(max_length=20, null=True, blank=True, default='')
+    code = models.CharField(max_length=20, null=True, blank=True, unique=True)
     # WordPress sync
     wp_post_id = models.IntegerField(null=True, blank=True, db_index=True)
     wp_slug = models.SlugField(null=True, blank=True)
@@ -103,6 +103,20 @@ class Property(BaseAuditModel):
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
 
     registry_number = models.CharField(max_length=80, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        super().save(*args, **kwargs)
+
+        if is_new and not self.code:
+            next_number = self.pk
+
+            while Property.objects.filter(code=f"PROP{next_number:06d}").exclude(pk=self.pk).exists():
+                next_number += 1
+
+            self.code = f"PROP{next_number:06d}"
+            super().save(update_fields=["code"])
 
     class Meta:
         db_table = "property"
