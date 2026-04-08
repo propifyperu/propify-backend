@@ -58,7 +58,7 @@ class ContactFilter(django_filters.FilterSet):
     email         = django_filters.CharFilter(field_name="email",         lookup_expr="icontains")
     phone         = django_filters.CharFilter(field_name="phone",         lookup_expr="icontains")
     document_type = django_filters.CharFilter(field_name="document_type", lookup_expr="exact")
-    ordering      = django_filters.OrderingFilter(fields=["created_at"])
+    ordering = django_filters.CharFilter(method="filter_ordering")
 
     class Meta:
         model = Contact
@@ -70,6 +70,21 @@ class ContactFilter(django_filters.FilterSet):
         for term in terms:
             q &= Q(first_name__icontains=term) | Q(last_name__icontains=term)
         return queryset.filter(q)
+    
+    def filter_ordering(self, queryset, name, value):
+        if value == "created_at":
+            return queryset.order_by("created_at")
+
+        if value == "-created_at":
+            return queryset.order_by("-created_at")
+
+        if value == "full_name":
+            return queryset.order_by("first_name", "last_name")
+
+        if value == "-full_name":
+            return queryset.order_by("-first_name", "-last_name")
+
+        return queryset
 
 
 class EventFilter(django_filters.FilterSet):
