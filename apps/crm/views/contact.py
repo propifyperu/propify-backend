@@ -1,6 +1,6 @@
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -25,6 +25,7 @@ class ContactViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     queryset = Contact.objects.prefetch_related("assigned_agent").all()
@@ -32,7 +33,7 @@ class ContactViewSet(
     pagination_class = ContactPagination
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
-    http_method_names = ["get", "post", "patch", "head", "options"]
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
     @swagger_auto_schema(tags=["CRM"], operation_summary="Listar contactos", manual_parameters=_CONTACT_FILTER_PARAMS)
     def list(self, request, *args, **kwargs):
@@ -74,6 +75,34 @@ class ContactViewSet(
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=["CRM"],
+        operation_summary="Eliminar contacto",
+        operation_description=(
+            "Si el contacto está asignado a más de un agente, solo se quita la asignación del usuario autenticado.\n\n"
+            "Si el contacto está asignado a un único agente (o ninguno), se elimina físicamente."
+        ),
+        responses={
+            200: "Contacto eliminado correctamente. / Asignación removida (el contacto tiene otros agentes asignados).",
+        },
+    )
+    def destroy(self, request, *args, **kwargs):
+        contact = self.get_object()
+        agent_count = contact.assigned_agent.count()
+
+        if agent_count > 1:
+            contact.assigned_agent.remove(request.user)
+            return Response(
+                {"detail": "Asignación removida. El contacto permanece asignado a otros agentes."},
+                status=status.HTTP_200_OK,
+            )
+
+        contact.delete()
+        return Response(
+            {"detail": "Contacto eliminado correctamente."},
+            status=status.HTTP_200_OK,
+        )
 
     @swagger_auto_schema(
         tags=["CRM"],
