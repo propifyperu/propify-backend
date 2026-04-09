@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.crm.models import Requirement
+from apps.crm.models import Requirement, RequirementMatch
 from apps.crm.validators import validate_requirement_create, validate_requirement_update
 from apps.locations.models import District, Urbanization
 
@@ -46,3 +46,13 @@ class RequirementSerializer(serializers.ModelSerializer):
         else:
             validate_requirement_update(self.instance, data)
         return data
+
+
+class RequirementCreateResponseSerializer(RequirementSerializer):
+    matches_count = serializers.SerializerMethodField()
+
+    def get_matches_count(self, obj):
+        return obj.requirement_matches.filter(is_active=True).count()
+
+    class Meta(RequirementSerializer.Meta):
+        fields = "__all__"
