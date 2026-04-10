@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.crm.models import Requirement, RequirementMatch
+from apps.crm.models import Requirement
 from apps.crm.validators import validate_requirement_create, validate_requirement_update
 from apps.locations.models import District, Urbanization
 

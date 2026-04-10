@@ -3,7 +3,7 @@ from datetime import date as date_cls, timedelta
 
 from django.db.models import Q
 
-from apps.crm.models import Contact, Event, Lead, Requirement
+from apps.crm.models import Contact, Event, Lead, Requirement, RequirementMatch
 
 
 class _CommaSeparatedIDFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
@@ -193,3 +193,11 @@ class LeadFilter(django_filters.FilterSet):
         if name != "date_mode":
             return queryset
         return _apply_date_mode(queryset, self.data, "date_entry")
+
+
+class RequirementMatchFilter(django_filters.FilterSet):
+    requirement_id = django_filters.NumberFilter(field_name="requirement_id")
+
+    class Meta:
+        model = RequirementMatch
+        fields = []
