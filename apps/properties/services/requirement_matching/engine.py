@@ -1,5 +1,5 @@
 # apps/properties/engine_matching/engine.py
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from django.db.models import Q, QuerySet
 from django.utils import timezone
