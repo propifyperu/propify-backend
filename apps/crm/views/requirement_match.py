@@ -11,7 +11,7 @@ from apps.crm.serializers import RequirementMatchSerializer
 class RequirementMatchViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = (
         RequirementMatch.objects
-        .select_related("requirement", "property")
+        .select_related("requirement", "property","property__district")
         .prefetch_related("property__media")
         .filter(is_active=True)
         .order_by("-score")
